@@ -1,0 +1,495 @@
+USE ns_Sp25_21482_Group9;
+
+###Tables 1 & 2
+#Tickets & Ticket Sales, Tickets contribute to Ticket Sales
+##Types of Tickets Ex. 1-Day pass, 2-Day Pass, Animal Encounter, etc.
+#Ticket Sales contributes to Profits & Expenses
+CREATE TABLE Ticket_Types(
+	typeOfTicket VARCHAR(25), 
+    amountPerTicket DECIMAL(4,2),
+    ticketDescription VARCHAR(85),
+    PRIMARY KEY (typeOfTicket)
+    );
+    
+CREATE TABLE Ticket_Sales(
+	tSaleDate DATE, 
+    amountSold INT,
+    typeOfTicket VARCHAR(25),
+    PRIMARY KEY(tSaleDate),
+    CONSTRAINT TSalesHasTickets FOREIGN KEY(typeOfTicket) REFERENCES Ticket_Types(typeOfTicket)
+    );
+ 
+###Table 3
+#Section of the Zoo, contributes to Enclosures
+##(Ex. Savannah, Jungle, etc.)
+CREATE TABLE Section(
+	sectionName VARCHAR(25), 
+    sectionTheme VARCHAR(45),
+    sectionLocation VARCHAR(85),
+    PRIMARY KEY(sectionName)
+    );
+
+###Table 4    
+#Enclosures (found within Sections, each has 1 or more animals within), Contributes to Resident Animal
+	CREATE TABLE Enclosure(
+	enclosureID VARCHAR(9), 
+    enclosureType VARCHAR(45),
+    sectionName VARCHAR(25),
+    PRIMARY KEY(enclosureID),
+    CONSTRAINT enclosureHasSection FOREIGN KEY(sectionName) REFERENCES Section(sectionName)
+    );
+
+###Table 5    
+#Food Source, contributes to Food Type
+##foodSource example: Joe's Lion Food, Cricket Meals LLC, etc.
+ CREATE TABLE Food_Source(
+	foodSource VARCHAR(45), 
+    pricePerUnit DECIMAL(4,2),
+    PRIMARY KEY (foodSource)
+    );
+ 
+###Table 6 
+#Food Type, gets info from Food Source, Contributes to Species
+CREATE TABLE Food_Type(
+	foodType VARCHAR(45), 
+    foodSource VARCHAR(45),
+    PRIMARY KEY(foodType),
+    CONSTRAINT foodHasSource FOREIGN KEY(foodSource) REFERENCES Food_Source(foodSource)
+    );
+
+###Table 7
+#Food transactions, contributes to Profits & Expenses
+  CREATE TABLE Food_Purchases(
+	foodPurchaseDate DATE, 
+    foodAmountBought DECIMAL(8.2),
+    foodSource VARCHAR(45),
+    PRIMARY KEY(foodPurchaseDate),
+    CONSTRAINT PurchaseHasSource FOREIGN KEY(foodSource) REFERENCES Food_Source(foodSource)
+    );
+
+###Table 8
+#Vet Needs, Also Contributes to Species
+##Vet needs ex. eye exam, fur analysis, nail trim, etc. 
+CREATE TABLE Vet_Needs(
+	vetProcedure VARCHAR(45), 
+    procedureDescription VARCHAR(85),
+    procedureCost DECIMAL(4,2),
+    PRIMARY KEY (vetProcedure)
+    );
+
+###Table 9
+#Species, Contributes to Resident Animal
+##Species would just be species name, ex. White Rhino, while species type would be "mammal" or "reptile", etc.
+CREATE TABLE Animal_Species(
+	species VARCHAR(45),
+    speciesType VARCHAR(45),
+    foodType VARCHAR(45),
+    vetProcedure VARCHAR(45),
+    PRIMARY KEY (species),
+    CONSTRAINT speciesNeedsVet FOREIGN KEY(vetProcedure) REFERENCES Vet_Needs(vetProcedure),
+    CONSTRAINT speciesNeedsFood FOREIGN KEY(foodType) REFERENCES Food_Type(foodType)
+    );
+
+
+##Table 10
+#Resident Animal, Contributes to Employees, Events, and Feeding Times
+##Includes random Animal ID and a name for the Animal, like "Joe"
+    CREATE TABLE Resident_Animal(
+	animalID VARCHAR(9), 
+    animalName VARCHAR(45),
+    species VARCHAR(45),
+    enclosureID VARCHAR(9), 
+    PRIMARY KEY(animalID),
+    CONSTRAINT animalHasEnclosure FOREIGN KEY(enclosureID) REFERENCES Enclosure(enclosureID),
+    CONSTRAINT animalHasSpecies FOREIGN KEY(species) REFERENCES Animal_Species(species)
+    );
+    
+###Table 11
+#Vet Transaction, contributes to Profits & Expenses
+CREATE TABLE Vet_Transactions(
+	vetOperationDate DATE, 
+	animalID VARCHAR(9),
+    PRIMARY KEY(vetOperationDate),
+    CONSTRAINT animalHadOperation FOREIGN KEY(animalID) REFERENCES Resident_Animal(animalID)
+    );
+
+###Table 12
+#Employees, each is assigned to an animal
+CREATE TABLE Zoo_Employees(
+	employeeNumber VARCHAR(9), 
+    employeeName VARCHAR(45),
+    employeeFname VARCHAR(13),
+    employeeLname VARCHAR(45),
+    yearsEmployed INT,
+    animalID VARCHAR(9),
+    PRIMARY KEY (employeeNumber),
+    CONSTRAINT animalHasEmployee FOREIGN KEY(animalID) REFERENCES Resident_Animal(animalID)
+    );
+
+###Table 13    
+#Zoo Events
+##Each event would have an animal, employees participating would be connected through the animal. 
+CREATE TABLE Zoo_Events(
+    zooEvent VARCHAR(45),
+    eventDescription VARCHAR(100),
+    animalID VARCHAR(9),
+    PRIMARY KEY(zooEvent),
+    CONSTRAINT eventHasAnimal FOREIGN KEY(animalID) REFERENCES Resident_Animal(animalID)
+    );
+
+INSERT INTO Section (sectionName, sectionTheme, sectionLocation) VALUES
+('Savannah', 'African Grasslands', 'Northwest Corner'),
+('Jungle', 'Tropical Rainforest', 'Southeast Corner'),
+('Arctic', 'Cold Climate Habitat', 'Northeast Corner'),
+('Wetlands', 'Swamp and Marsh', 'Southwest Corner'),
+('Desert', 'Arid Climate Zone', 'Central Zone'),
+('Aviary', 'Bird Sanctuary', 'West Side'),
+('Reptile House', 'Tropical and Desert Reptiles', 'East Side'),
+('Aquarium', 'Freshwater and Marine Life', 'Underground Level'),
+('Nocturnal', 'Nighttime Adapted Animals', 'Dark Zone Exhibit'),
+('Petting Zoo', 'Interactive Domestic Animals', 'South Side'),
+('Primate Habitat', 'Monkeys and Apes', 'Tree Canopy Zone'),
+('Big Cat Territory', 'Lions, Tigers, and More', 'North Side');
+
+INSERT INTO Enclosure (enclosureID, enclosureType, sectionName) VALUES
+-- Savannah
+('ENC001', 'Open Plain Habitat', 'Savannah'),
+('ENC002', 'Grassland Enclosure', 'Savannah'),
+('ENC003', 'Watering Hole Habitat', 'Savannah'),
+
+-- Jungle
+('ENC004', 'Rainforest Dome', 'Jungle'),
+('ENC005', 'Tropical Canopy Enclosure', 'Jungle'),
+('ENC006', 'Jungle Floor Habitat', 'Jungle'),
+
+-- Arctic
+('ENC007', 'Ice Cave Enclosure', 'Arctic'),
+('ENC008', 'Snowfield Habitat', 'Arctic'),
+
+-- Wetlands
+('ENC009', 'Swamp Enclosure', 'Wetlands'),
+('ENC010', 'Marsh Viewing Habitat', 'Wetlands'),
+
+-- Desert
+('ENC011', 'Sand Dune Habitat', 'Desert'),
+('ENC012', 'Rocky Canyon Enclosure', 'Desert'),
+('ENC013', 'Oasis Habitat', 'Desert'),
+
+-- Aviary
+('ENC014', 'Tropical Aviary Dome', 'Aviary'),
+('ENC015', 'Open Sky Bird Enclosure', 'Aviary'),
+
+-- Reptile House
+('ENC016', 'Desert Reptile Exhibit', 'Reptile House'),
+('ENC017', 'Rainforest Reptile Enclosure', 'Reptile House'),
+
+-- Aquarium
+('ENC018', 'Coral Reef Tank', 'Aquarium'),
+('ENC019', 'Freshwater River Tank', 'Aquarium'),
+('ENC020', 'Deep Sea Exhibit', 'Aquarium'),
+
+-- Nocturnal
+('ENC021', 'Cave Habitat', 'Nocturnal'),
+('ENC022', 'Forest Night Exhibit', 'Nocturnal'),
+
+-- Petting Zoo
+('ENC023', 'Goat Pen', 'Petting Zoo'),
+('ENC024', 'Sheep Pasture', 'Petting Zoo'),
+('ENC025', 'Rabbit Hutch', 'Petting Zoo'),
+
+-- Primate Habitat
+('ENC026', 'Treehouse Habitat', 'Primate Habitat'),
+('ENC027', 'Forest Floor Enclosure', 'Primate Habitat'),
+
+-- Big Cat Territory
+('ENC028', 'Lion Enclosure', 'Big Cat Territory'),
+('ENC029', 'Tiger Habitat', 'Big Cat Territory'),
+('ENC030', 'Leopard Ledge', 'Big Cat Territory');
+
+INSERT INTO Food_Source (foodSource, pricePerUnit) VALUES
+('Green Pastures Feed Co.', 15.75),
+('Savanna Foliage Supply', 12.50),
+('Farm Fresh Hay Distributors', 10.00),
+('Carnivore Cuisine Inc.', 25.00),
+('Tropical Harvest Suppliers', 18.20),
+('Bug Bites LLC', 8.50),
+('Oceanic Seafood Suppliers', 22.00),
+('Rodent Ranch', 14.30),
+('Wild Diet Solutions', 27.00),
+('Aquatic Feeds Ltd.', 16.75),
+('Desert Forage Co.', 11.60),
+('Rainforest Bounty Foods', 19.50),
+('Reptile Feeds Unlimited', 20.40),
+('Marine Microfoods', 13.90),
+('Deep Sea Harvesters', 21.25),
+('Barnyard Best', 9.80),
+('EcoGreen Farms', 10.20),
+('Organic Greens Inc.', 12.00),
+('Zoo Nutrition Services', 23.50),
+('Alpine Butchers', 26.75);
+
+INSERT INTO Food_Type (foodType, foodSource) VALUES
+('Herbivore Pellets', 'Green Pastures Feed Co.'),
+('Acacia Leaves', 'Savanna Foliage Supply'),
+('Grass Hay', 'Farm Fresh Hay Distributors'),
+('Raw Meat', 'Carnivore Cuisine Inc.'),
+('Fruits and Nuts', 'Tropical Harvest Suppliers'),
+('Live Insects', 'Bug Bites LLC'),
+('Fish Diet', 'Oceanic Seafood Suppliers'),
+('Small Rodents', 'Rodent Ranch'),
+('Whole Prey', 'Wild Diet Solutions'),
+('Shrimp Diet', 'Aquatic Feeds Ltd.'),
+('Dry Grasses', 'Desert Forage Co.'),
+('Tropical Fruits', 'Rainforest Bounty Foods'),
+('Large Rodents', 'Reptile Feeds Unlimited'),
+('Plankton', 'Marine Microfoods'),
+('Crustaceans', 'Deep Sea Harvesters'),
+('Insects', 'Bug Bites LLC'),
+('Hay and Grain', 'Barnyard Best'),
+('Grass', 'EcoGreen Farms'),
+('Leafy Greens', 'Organic Greens Inc.'),
+('Mixed Diet', 'Zoo Nutrition Services'),
+('Mountain Goat Meat', 'Alpine Butchers');
+
+INSERT INTO Food_Type (foodType, foodSource) VALUES
+('Small Insects', 'Bug Bites LLC'),
+('Whole Fish', 'Oceanic Seafood Suppliers'),
+('Small Fish', 'Oceanic Seafood Suppliers'),
+('Fruits and Leaves', 'Rainforest Bounty Foods');
+
+INSERT INTO Vet_Needs (vetProcedure, procedureDescription, procedureCost) VALUES
+('Foot Care', 'Routine trimming and treatment for foot health', 50.00),
+('Hoof Trimming', 'Regular maintenance for hooved animals', 40.00),
+('Horn Inspection', 'Checking horn growth and health', 35.00),
+('Dental Check', 'Inspection and cleaning of teeth', 45.00),
+('Vaccination', 'Routine immunization against diseases', 30.00),
+('Skin Analysis', 'Assessment of skin health and hydration', 25.00),
+('Fur Analysis', 'Inspection of fur condition and potential diseases', 30.00),
+('Ear Cleaning', 'Removal of debris and parasites from ears', 20.00),
+('Blood Work', 'Routine blood analysis for health monitoring', 55.00),
+('Leg Exam', 'Evaluation of leg movement and joint health', 40.00),
+('Venom Study', 'Assessment of venom production in reptiles', 60.00),
+('Beak Trimming', 'Shaping and trimming overgrown beaks', 35.00),
+('Scale Exam', 'Inspection for shedding issues and scale health', 25.00),
+('Weight Check', 'Routine weight monitoring for health tracking', 20.00),
+('Water Quality Test', 'Assessment of tank water conditions', 30.00),
+('Arm Check', 'Examination of limb function and flexibility', 35.00),
+('Nail Trimming', 'Claw and nail maintenance for healthy growth', 20.00),
+('Wing Check', 'Evaluation of wing strength and feather condition', 30.00),
+('Shearing', 'Wool trimming for comfort and hygiene', 40.00),
+('Cognitive Check', 'Mental and behavioral health assessment', 50.00),
+('Shoulder Mobility Exam', 'Joint flexibility and movement check', 45.00),
+('Claw Trimming', 'Routine claw care for safety and health', 25.00),
+('Eye Exam', 'Vision test and eye health assessment', 30.00);
+
+INSERT INTO Animal_Species (species, speciesType, foodType, vetProcedure) VALUES
+-- Savannah
+('African Elephant', 'Mammal', 'Herbivore Pellets', 'Foot Care'),
+('Giraffe', 'Mammal', 'Acacia Leaves', 'Hoof Trimming'),
+('White Rhino', 'Mammal', 'Grass Hay', 'Horn Inspection'),
+
+-- Jungle
+('Jaguar', 'Mammal', 'Raw Meat', 'Dental Check'),
+('Capuchin Monkey', 'Mammal', 'Fruits and Nuts', 'Vaccination'),
+('Poison Dart Frog', 'Amphibian', 'Live Insects', 'Skin Analysis'),
+
+-- Arctic
+('Polar Bear', 'Mammal', 'Fish Diet', 'Fur Analysis'),
+('Arctic Fox', 'Mammal', 'Small Rodents', 'Ear Cleaning'),
+
+-- Wetlands
+('American Alligator', 'Reptile', 'Whole Prey', 'Blood Work'),
+('Flamingo', 'Bird', 'Shrimp Diet', 'Leg Exam'),
+
+-- Desert
+('Fennec Fox', 'Mammal', 'Insects', 'Dental Check'),
+('Gila Monster', 'Reptile', 'Large Rodents', 'Venom Study'),
+('Dromedary Camel', 'Mammal', 'Dry Grasses', 'Hoof Trimming'),
+
+-- Aviary
+('Bald Eagle', 'Bird', 'Raw Meat', 'Beak Trimming'),
+('Macaw', 'Bird', 'Tropical Fruits', 'Wing Check'),
+
+-- Reptile House
+('Komodo Dragon', 'Reptile', 'Raw Meat', 'Scale Exam'),
+('Green Anaconda', 'Reptile', 'Whole Prey', 'Weight Check'),
+
+-- Aquarium
+('Clownfish', 'Fish', 'Plankton', 'Water Quality Test'),
+('Piranha', 'Fish', 'Crustaceans', 'Dental Check'),
+('Octopus', 'Cephalopod', 'Mixed Diet', 'Arm Check'),
+
+-- Nocturnal
+('Aye-Aye', 'Mammal', 'Insects', 'Nail Trimming'),
+('Fruit Bat', 'Mammal', 'Fruits and Nuts', 'Wing Check'),
+
+-- Petting Zoo
+('Nigerian Dwarf Goat', 'Mammal', 'Hay and Grain', 'Hoof Trimming'),
+('Shetland Sheep', 'Mammal', 'Grass', 'Shearing'),
+('Holland Lop Rabbit', 'Mammal', 'Leafy Greens', 'Dental Check'),
+
+-- Primate Habitat
+('Chimpanzee', 'Mammal', 'Mixed Diet', 'Cognitive Check'),
+('Orangutan', 'Mammal', 'Fruits and Nuts', 'Shoulder Mobility Exam'),
+
+-- Big Cat Territory
+('African Lion', 'Mammal', 'Raw Meat', 'Claw Trimming'),
+('Bengal Tiger', 'Mammal', 'Raw Meat', 'Dental Check'),
+('Snow Leopard', 'Mammal', 'Mountain Goat Meat', 'Eye Exam');
+
+INSERT INTO Resident_Animal (animalID, animalName, species, enclosureID) VALUES
+-- Savannah (Section: Savannah)
+('RA001', 'Dumbo', 'African Elephant', 'ENC001'),
+('RA002', 'Longneck', 'Giraffe', 'ENC002'),
+('RA003', 'Tank', 'White Rhino', 'ENC003'),
+
+-- Jungle (Section: Jungle)
+('RA004', 'Shadow', 'Jaguar', 'ENC004'),
+('RA005', 'Chatter', 'Capuchin Monkey', 'ENC005'),
+('RA006', 'Spot', 'Poison Dart Frog', 'ENC006'),
+
+-- Arctic (Section: Arctic)
+('RA007', 'Aurora', 'Polar Bear', 'ENC007'),
+('RA008', 'Frost', 'Arctic Fox', 'ENC008'),
+
+-- Wetlands (Section: Wetlands)
+('RA009', 'Snapper', 'American Alligator', 'ENC009'),
+('RA010', 'Flame', 'Flamingo', 'ENC010'),
+
+-- Desert (Section: Desert)
+('RA011', 'Whisper', 'Fennec Fox', 'ENC011'),
+('RA012', 'Slither', 'Gila Monster', 'ENC012'),
+('RA013', 'Sahara', 'Dromedary Camel', 'ENC013'),
+
+-- Aviary (Section: Aviary)
+('RA014', 'Majesty', 'Bald Eagle', 'ENC014'),
+('RA015', 'Rio', 'Macaw', 'ENC015'),
+
+-- Reptile House (Section: Reptile House)
+('RA016', 'Draco', 'Komodo Dragon', 'ENC016'),
+('RA017', 'Python', 'Green Anaconda', 'ENC017'),
+
+-- Aquarium (Section: Aquarium)
+('RA018', 'Nemo', 'Clownfish', 'ENC018'),
+('RA019', 'Fang', 'Piranha', 'ENC019'),
+('RA020', 'Inky', 'Octopus', 'ENC020'),
+
+-- Nocturnal (Section: Nocturnal)
+('RA021', 'Blink', 'Aye-Aye', 'ENC021'),
+('RA022', 'Echo', 'Fruit Bat', 'ENC022'),
+
+-- Petting Zoo (Section: Petting Zoo)
+('RA023', 'Billy', 'Nigerian Dwarf Goat', 'ENC023'),
+('RA024', 'Wooly', 'Shetland Sheep', 'ENC024'),
+('RA025', 'Hopper', 'Holland Lop Rabbit', 'ENC025'),
+
+-- Primate Habitat (Section: Primate Habitat)
+('RA026', 'Chimp', 'Chimpanzee', 'ENC026'),
+('RA027', 'Orang', 'Orangutan', 'ENC027'),
+
+-- Big Cat Territory (Section: Big Cat Territory)
+('RA028', 'Simba', 'African Lion', 'ENC028'),
+('RA029', 'Stripe', 'Bengal Tiger', 'ENC029'),
+('RA030', 'Ghost', 'Snow Leopard', 'ENC030');
+
+INSERT INTO Zoo_Employees (employeeNumber, employeeName, employeeFname, employeeLname, yearsEmployed, animalID) VALUES
+('ZE001', 'Emma Williams', 'Emma', 'Williams', 6, 'RA001'),
+('ZE002', 'Liam Brown', 'Liam', 'Brown', 4, 'RA002'),
+('ZE003', 'Olivia Jones', 'Olivia', 'Jones', 8, 'RA003'),
+('ZE004', 'Noah Miller', 'Noah', 'Miller', 5, 'RA004'),
+('ZE005', 'Ava Davis', 'Ava', 'Davis', 3, 'RA005'),
+('ZE006', 'William Garcia', 'William', 'Garcia', 7, 'RA006'),
+('ZE007', 'Sophia Rodriguez', 'Sophia', 'Rodriguez', 2, 'RA007'),
+('ZE008', 'James Martinez', 'James', 'Martinez', 9, 'RA008'),
+('ZE009', 'Mia Hernandez', 'Mia', 'Hernandez', 5, 'RA009'),
+('ZE010', 'Benjamin Lopez', 'Benjamin', 'Lopez', 4, 'RA010'),
+('ZE011', 'Charlotte Gonzalez', 'Charlotte', 'Gonzalez', 6, 'RA011'),
+('ZE012', 'Alexander Wilson', 'Alexander', 'Wilson', 3, 'RA012'),
+('ZE013', 'Amelia Anderson', 'Amelia', 'Anderson', 7, 'RA013'),
+('ZE014', 'Michael Thomas', 'Michael', 'Thomas', 4, 'RA014'),
+('ZE015', 'Harper Taylor', 'Harper', 'Taylor', 2, 'RA015'),
+('ZE016', 'Ethan Moore', 'Ethan', 'Moore', 5, 'RA016'),
+('ZE017', 'Evelyn Jackson', 'Evelyn', 'Jackson', 6, 'RA017'),
+('ZE018', 'Daniel Martin', 'Daniel', 'Martin', 3, 'RA018'),
+('ZE019', 'Abigail Lee', 'Abigail', 'Lee', 5, 'RA019'),
+('ZE020', 'Matthew Perez', 'Matthew', 'Perez', 4, 'RA020'),
+('ZE021', 'Sofia Thompson', 'Sofia', 'Thompson', 7, 'RA021'),
+('ZE022', 'Jacob White', 'Jacob', 'White', 3, 'RA022'),
+('ZE023', 'Chloe Harris', 'Chloe', 'Harris', 6, 'RA023'),
+('ZE024', 'David Clark', 'David', 'Clark', 4, 'RA024'),
+('ZE025', 'Grace Lewis', 'Grace', 'Lewis', 5, 'RA025'),
+('ZE026', 'Samuel Robinson', 'Samuel', 'Robinson', 4, 'RA026'),
+('ZE027', 'Lily Walker', 'Lily', 'Walker', 3, 'RA027'),
+('ZE028', 'Jack Hall', 'Jack', 'Hall', 6, 'RA028'),
+('ZE029', 'Victoria Allen', 'Victoria', 'Allen', 2, 'RA029'),
+('ZE030', 'Henry Young', 'Henry', 'Young', 5, 'RA030');
+
+INSERT INTO Zoo_Events (zooEvent, eventDescription, animalID) VALUES
+('Savannah Spectacle', 'A vibrant display featuring the African Elephant in its natural habitat.', 'RA001'),
+('Jungle Jaunt', 'A thrilling tour showcasing the stealth of the Jaguar.', 'RA004'),
+('Arctic Adventure', 'An interactive exhibit with the majestic Polar Bear.', 'RA007'),
+('Wetlands Wonder', 'A close-up encounter with the American Alligator in the wetlands.', 'RA009'),
+('Desert Delight', 'Discover the survival tactics of the Fennec Fox in the arid desert.', 'RA011'),
+('Aviary Aerial', 'Watch the soaring flight of the Bald Eagle in the open skies.', 'RA014'),
+('Reptile Rendezvous', 'Learn about the fascinating life of the Komodo Dragon.', 'RA016'),
+('Aquarium Quest', 'Explore the vibrant underwater world with the Clownfish.', 'RA018'),
+('Nocturnal Nook', 'Experience the unique behaviors of the Aye-Aye after dark.', 'RA021'),
+('Petting Zoo Party', 'Interact with the friendly Nigerian Dwarf Goat up close.', 'RA023'),
+('Primate Playtime', 'Engage with the intelligent Chimpanzee during interactive sessions.', 'RA026'),
+('Big Cat Bonanza', 'Witness the power and grace of the African Lion in action.', 'RA028');
+
+INSERT INTO Vet_Transactions (vetOperationDate, animalID) VALUES
+('2025-01-01', 'RA001'),  -- African Elephant (Savannah)
+('2025-01-02', 'RA004'),  -- Jaguar (Jungle)
+('2025-01-03', 'RA007'),  -- Polar Bear (Arctic)
+('2025-01-04', 'RA010'),  -- Flamingo (Wetlands)
+('2025-01-05', 'RA013'),  -- Dromedary Camel (Desert)
+('2025-01-06', 'RA014'),  -- Bald Eagle (Aviary)
+('2025-01-07', 'RA016'),  -- Komodo Dragon (Reptile House)
+('2025-01-08', 'RA019'),  -- Piranha (Aquarium)
+('2025-01-09', 'RA022'),  -- Fruit Bat (Nocturnal)
+('2025-01-10', 'RA025'),  -- Holland Lop Rabbit (Petting Zoo)
+('2025-01-11', 'RA026'),  -- Chimpanzee (Primate Habitat)
+('2025-01-12', 'RA028');  -- African Lion (Big Cat Territory)
+
+INSERT INTO Food_Purchases (foodPurchaseDate, foodAmountBought, foodSource) VALUES
+('2025-01-01', 180.50, 'Green Pastures Feed Co.'),
+('2025-01-02', 210.75, 'Farm Fresh Hay Distributors'),
+('2025-01-03', 300.00, 'Carnivore Cuisine Inc.'),
+('2025-01-04', 190.25, 'Tropical Harvest Suppliers'),
+('2025-01-05', 95.50, 'Bug Bites LLC'),
+('2025-01-06', 230.00, 'Oceanic Seafood Suppliers'),
+('2025-01-07', 110.00, 'Rodent Ranch'),
+('2025-01-08', 260.80, 'Wild Diet Solutions'),
+('2025-01-09', 150.40, 'Aquatic Feeds Ltd.'),
+('2025-01-10', 120.60, 'Desert Forage Co.'),
+('2025-01-11', 200.00, 'Rainforest Bounty Foods'),
+('2025-01-12', 220.50, 'Reptile Feeds Unlimited');
+
+INSERT INTO Ticket_Types (typeOfTicket, amountPerTicket, ticketDescription) VALUES
+('1-Day Pass', 15.00, 'Admission valid for one day'),
+('2-Day Pass', 25.00, 'Admission valid for two consecutive days'),
+('Family Package', 40.00, 'Admission for 2 adults and 2 children'),
+('Animal Encounter', 10.00, 'Access to exclusive animal encounters'),
+('VIP Tour', 50.00, 'Guided tour with behind-the-scenes access'),
+('Group Discount', 12.00, 'Discounted rate for groups of 10 or more'),
+('Senior Citizen', 10.00, 'Discounted rate for visitors aged 65+'),
+('Child Ticket', 8.00, 'Admission for children under 12 years old'),
+('Night Safari', 20.00, 'Evening experience with nocturnal animals'),
+('Season Pass', 99.99, 'Unlimited visits throughout the season'),
+('Student Discount', 9.00, 'Discounted rate for students with valid ID'),
+('Employee Benefit', 0.00, 'Free admission for zoo employees');
+
+INSERT INTO Ticket_Sales (tSaleDate, amountSold, typeOfTicket) VALUES
+('2025-01-01', 150, '1-Day Pass'),
+('2025-01-02', 75, '2-Day Pass'),
+('2025-01-03', 50, 'Family Package'),
+('2025-01-04', 120, 'Animal Encounter'),
+('2025-01-05', 90, 'VIP Tour'),
+('2025-01-06', 200, 'Group Discount'),
+('2025-01-07', 100, 'Senior Citizen'),
+('2025-01-08', 80, 'Child Ticket'),
+('2025-01-09', 110, 'Night Safari'),
+('2025-01-10', 60, 'Season Pass'),
+('2025-01-11', 130, 'Student Discount'),
+('2025-01-12', 45, 'Employee Benefit');
